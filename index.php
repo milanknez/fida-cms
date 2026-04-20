@@ -70,7 +70,17 @@ $_SESSION['current_page'] = $currentPage;
         .editor-canvas { flex-grow: 1; height: 100%; overflow: hidden; position: relative; }
         .panel-right { width: 310px; background: var(--panel-bg); color: #cbd5e1; display: flex; flex-direction: column; z-index: 10; border-left: 1px solid rgba(0,0,0,0.3); }
 
-        #gjs { border: none; }
+        #gjs { 
+            border: none; 
+            height: 100% !important; 
+            width: 100% !important;
+        }
+        .gjs-cv-canvas {
+            width: 100% !important;
+            height: 100% !important;
+            top: 0 !important;
+            left: 0 !important;
+        }
         .sidebar-section { 
             display: flex; 
             flex-direction: column; 
@@ -153,7 +163,12 @@ $_SESSION['current_page'] = $currentPage;
                 <div class="p-2 bg-[var(--primary)] rounded-lg shadow-lg">
                     <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/></svg>
                 </div>
-                <h1 class="font-black text-lg tracking-tighter text-white uppercase">Web editor</h1>
+                <h1 class="font-black text-lg tracking-tighter text-white uppercase flex items-center gap-2">
+                    Web editor 
+                    <span class="text-[10px] bg-white/10 px-2 py-0.5 rounded-full font-normal tracking-normal normal-case opacity-60">
+                        v<?= APP_VERSION ?>
+                    </span>
+                </h1>
             </div>
 
             <div class="flex items-center gap-4 border-l border-white/10 pl-10">
@@ -176,6 +191,11 @@ $_SESSION['current_page'] = $currentPage;
             <div id="panel-actions" class="flex items-center gap-3 bg-slate-800/80 rounded-lg p-1.5 px-4"></div>
             
             <div class="flex items-center gap-4 border-l border-white/10 pl-8">
+                <div id="update-banner" class="hidden">
+                    <button onclick="runUpdate()" class="text-[10px] bg-amber-500 hover:bg-amber-600 text-white font-bold py-1 px-3 rounded shadow-sm flex items-center gap-2 transition-all">
+                        <i class="fa fa-refresh"></i> UPDATE AVAILABLE
+                    </button>
+                </div>
                 <div id="status-msg" class="text-xs text-sky-400 font-bold opacity-0 transition-opacity">Saved!</div>
                 <button id="save-btn" class="bg-[var(--primary)] hover:bg-[var(--primary-dark)] text-white px-8 py-2.5 rounded-lg font-bold text-xs transition-all shadow-lg active:transform active:scale-95 whitespace-nowrap">
                     <?= $uiLang === 'cs' ? 'ULOŽIT ZMĚNY' : 'SAVE CHANGES' ?>
@@ -212,7 +232,41 @@ $_SESSION['current_page'] = $currentPage;
     <script>
         window.INITIAL_CONTENT = <?php echo json_encode($content); ?>;
         window.UI_LANG = <?php echo json_encode($uiLang); ?>;
+
+        // Check for updates
+        function checkUpdates() {
+            fetch('update.php?action=check')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.updates_available) {
+                        document.getElementById('update-banner').classList.remove('hidden');
+                    }
+                });
+        }
+
+        function runUpdate() {
+            if (!confirm('Opravdu chcete aktualizovat systém z GitHubu?')) return;
+            const btn = document.querySelector('#update-banner button');
+            const originalHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa fa-refresh fa-spin"></i> UPDATING...';
+            btn.disabled = true;
+
+            fetch('update.php?action=pull')
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        alert(data.message);
+                        location.reload();
+                    } else {
+                        alert('Chyba: ' + data.message);
+                        btn.innerHTML = originalHtml;
+                        btn.disabled = false;
+                    }
+                });
+        }
+
+        setTimeout(checkUpdates, 2000); // Check after 2s
     </script>
-    <script src="editor.js"></script>
+    <script src="js/editor.js"></script>
 </body>
 </html>

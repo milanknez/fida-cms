@@ -1,0 +1,18 @@
+/* 
+  Fix for GrapesJS editor canvas 
+  Ensures all elements hidden by scroll animations are visible 
+*/
+
+.reveal, 
+.reveal-up, 
+.reveal-left, 
+.reveal-right,
+.fadeIn,
+.fadeInDelay,
+.fadeInExtra {
+    opacity: 1 !important;
+    transform: none !important;
+    visibility: visible !important;
+    animation: none !important;
+    transition: none !important;
+}
