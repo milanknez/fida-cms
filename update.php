@@ -10,23 +10,37 @@ if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
 $action = $_GET['action'] ?? 'check';
 $response = ['status' => 'success', 'message' => ''];
 
-// GitHub Raw URL for config.php to check version
-$githubConfigUrl = 'https://raw.githubusercontent.com/milanknez/fida-cms/main/admin/config.php';
+// GitHub URLs (with cache buster for version check)
+$githubVersionUrl = 'https://raw.githubusercontent.com/milanknez/fida-cms/main/version.php?t=' . time();
 $githubZipUrl = 'https://github.com/milanknez/fida-cms/archive/refs/heads/main.zip';
 
 if ($action === 'check') {
-    $remoteConfig = @file_get_contents($githubConfigUrl);
-    if ($remoteConfig && preg_match("/define\('APP_VERSION', '(.*?)'\)/", $remoteConfig, $matches)) {
+    $remoteVersionContent = @file_get_contents($githubVersionUrl);
+    if ($remoteVersionContent && preg_match("/define\('APP_VERSION', '(.*?)'\)/", $remoteVersionContent, $matches)) {
         $remoteVersion = $matches[1];
         if (version_compare($remoteVersion, APP_VERSION, '>')) {
             $response['updates_available'] = true;
             $response['message'] = "Nová verze $remoteVersion je k dispozici!";
         } else {
             $response['updates_available'] = false;
-            $response['message'] = 'Máte aktuální verzi.';
+            $response['message'] = 'Máte aktuální verzi (v' . APP_VERSION . ').';
         }
     } else {
-        $response = ['status' => 'error', 'message' => 'Nepodařilo se ověřit verzi na GitHubu.'];
+        // Fallback search in config.php if version.php is not found yet
+        $githubConfigUrl = 'https://raw.githubusercontent.com/milanknez/fida-cms/main/config.php?t=' . time();
+        $remoteConfig = @file_get_contents($githubConfigUrl);
+        if ($remoteConfig && preg_match("/define\('APP_VERSION', '(.*?)'\)/", $remoteConfig, $matches)) {
+            $remoteVersion = $matches[1];
+            if (version_compare($remoteVersion, APP_VERSION, '>')) {
+                $response['updates_available'] = true;
+                $response['message'] = "Nová verze $remoteVersion je k dispozici!";
+            } else {
+                $response['updates_available'] = false;
+                $response['message'] = 'Máte aktuální verzi.';
+            }
+        } else {
+            $response = ['status' => 'error', 'message' => 'Nepodařilo se ověřit verzi na GitHubu.'];
+        }
     }
 } elseif ($action === 'pull') {
     // Download ZIP
@@ -40,44 +54,56 @@ if ($action === 'check') {
         
         $zip = new ZipArchive;
         if ($zip->open($zipFile) === TRUE) {
-            // ZIP contains a subfolder fida-cms-main, we need to extract its content
             $tempFolder = 'update_extract_temp/';
             $zip->extractTo($tempFolder);
             $zip->close();
             
-            // Move files from fida-cms-main/admin/* to current folder
-            $sourceAdmin = $tempFolder . 'fida-cms-main/admin/';
-            if (is_dir($sourceAdmin)) {
-                $files = scandir($sourceAdmin);
+            // Move files from fida-cms-main/* to current folder (admin/)
+            $sourceRoot = $tempFolder . 'fida-cms-main/';
+            if (is_dir($sourceRoot)) {
+                $files = scandir($sourceRoot);
                 foreach ($files as $file) {
-                    if ($file === '.' || $file === '..' || $file === 'config.php') continue; // Don't overwrite local config!
-                    copy($sourceAdmin . $file, './' . $file);
+                    if ($file === '.' || $file === '..' || $file === 'config.php' || $file === '.git') continue; 
+                    
+                    $src = $sourceRoot . $file;
+                    $dst = './' . $file;
+
+                    if (is_dir($src)) {
+                        if (!is_dir($dst)) mkdir($dst);
+                        $subFiles = scandir($src);
+                        foreach($subFiles as $sf) {
+                            if ($sf !== '.' && $sf !== '..') copy($src . '/' . $sf, $dst . '/' . $sf);
+                        }
+                    } else {
+                        copy($src, $dst);
+                    }
                 }
                 
-                // Cleanup
-                function rrmdir($dir) {
+                // Cleanup function
+                $rrmdir = function ($dir) use (&$rrmdir) {
                     if (is_dir($dir)) {
                         $objects = scandir($dir);
                         foreach ($objects as $object) {
                             if ($object != "." && $object != "..") {
                                 if (is_dir($dir. DIRECTORY_SEPARATOR .$object) && !is_link($dir."/".$object))
-                                    rrmdir($dir. DIRECTORY_SEPARATOR .$object);
+                                    $rrmdir($dir. DIRECTORY_SEPARATOR .$object);
                                 else
                                     unlink($dir. DIRECTORY_SEPARATOR .$object);
                             }
                         }
                         rmdir($dir);
                     }
-                }
-                rrmdir($tempFolder);
+                };
+                
+                $rrmdir($tempFolder);
                 unlink($zipFile);
                 
-                $response['message'] = 'Aktualizace proběhla úspěšně! Vaše nastavení v config.php zůstalo zachováno.';
+                $response['message'] = 'Aktualizace proběhla úspěšně!';
             } else {
-                $response = ['status' => 'error', 'message' => 'V archivu nebyla nalezena složka admin/.'];
+                $response = ['status' => 'error', 'message' => 'V archivu nebyla nalezena data.'];
             }
         } else {
-            $response = ['status' => 'error', 'message' => 'Nepodařilo se otevřít ZIP archiv (chybí rozšíření ZipArchive?).'];
+            $response = ['status' => 'error', 'message' => 'Nepodařilo se otevřít ZIP archiv (ZipArchive?).'];
         }
     }
 }
