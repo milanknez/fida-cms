@@ -1,7 +1,15 @@
 /* 
   Fix for GrapesJS editor canvas 
+  Ensures all elements hidden by scroll animations are visible 
 */
-.reveal, .reveal-up, .reveal-left, .reveal-right, .fadeIn, .fadeInDelay, .fadeInExtra {
+
+.reveal, 
+.reveal-up, 
+.reveal-left, 
+.reveal-right,
+.fadeIn,
+.fadeInDelay,
+.fadeInExtra {
     opacity: 1 !important;
     transform: none !important;
     visibility: visible !important;
@@ -9,6 +17,7 @@
     transition: none !important;
 }
 
+/* Ensure Lucide icons have block display inside editor so dimensions apply */
 i[data-lucide] {
     display: inline-block !important;
     vertical-align: middle;
