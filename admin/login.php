@@ -1,7 +1,16 @@
 <?php
-require_once 'config.php';
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/AuthManager.php';
+
+AuthManager::initSession();
 
 $error = '';
+
+if (isset($_GET['logout'])) {
+    AuthManager::logout();
+    header('Location: login.php');
+    exit;
+}
 
 if (isset($_POST['password'])) {
     if ($_POST['password'] === ADMIN_PASSWORD) {
@@ -11,12 +20,6 @@ if (isset($_POST['password'])) {
     } else {
         $error = 'Nesprávné heslo.';
     }
-}
-
-if (isset($_GET['logout'])) {
-    session_destroy();
-    header('Location: login.php');
-    exit;
 }
 ?>
 <!DOCTYPE html>

@@ -32,31 +32,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $template = "<?php 
-require_once 'includes/CMS.php';
-\$meta = CMS::getPageMeta();
-?>
-<!DOCTYPE html>
-<html lang=\"cs\">
-<head>
-    <?php include 'includes/head.php'; ?>
-</head>
-<body>
-    <?php include 'includes/header.php'; ?>
-    
-    <main>
-        <section class=\"section-padding\">
-            <div class=\"container\">
-                <h1>Nová stránka: " . str_replace('.php', '', $filename) . "</h1>
-                <p>Zde začněte tvořit svůj obsah...</p>
-            </div>
-        </section>
-    </main>
-
-    <?php include 'includes/footer.php'; ?>
-    <script>if (typeof lucide !== 'undefined') lucide.createIcons();</script>
-</body>
-</html>";
+    $template = "<?php\nrequire_once __DIR__ . '/admin/includes/CMS.php';\nCMS::getHeader();\n?>\n<section class=\"py-20 max-w-7xl mx-auto px-6 space-y-8\">\n    <h1 class=\"text-4xl font-extrabold text-white\">" . htmlspecialchars(ucfirst(str_replace('.php', '', $filename))) . "</h1>\n    <p class=\"text-slate-300\">Zde začněte tvořit obsah nové stránky...</p>\n</section>\n<?php\nCMS::getFooter();\n?>\n";
 
     if (file_put_contents($targetPath, $template)) {
         $pagesPath = ROOT_DIR . 'config/pages.json';
@@ -74,7 +50,7 @@ require_once 'includes/CMS.php';
         ];
         file_put_contents($pagesPath, json_encode($pages, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE));
 
-        require_once ROOT_DIR . 'includes/CMS.php';
+        require_once __DIR__ . '/includes/CMS.php';
         $gitResult = CMS::gitCommit("Create new page: $filename");
 
         echo json_encode([

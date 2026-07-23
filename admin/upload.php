@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         exit('No files uploaded');
     }
 
-    $uploadDir = ROOT_DIR . 'assets/img/uploads/';
+    $uploadDir = ROOT_DIR . 'uploads/';
     if (!file_exists($uploadDir)) {
         mkdir($uploadDir, 0755, true);
     }
@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $target = $uploadDir . $cleanName;
         
         if (move_uploaded_file($tmpName, $target)) {
-            $responses[] = 'assets/img/uploads/' . $cleanName;
+            $responses[] = '../uploads/' . $cleanName;
         } else {
             $errors[] = "Failed to move uploaded file: $name";
         }

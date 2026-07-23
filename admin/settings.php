@@ -1,61 +1,50 @@
 <?php
-require_once 'config.php';
+@ini_set('display_errors', '0');
+error_reporting(0);
 
-// Security check
-if (!isset($_SESSION['logged_in']) || $_SESSION['logged_in'] !== true) {
-    header('HTTP/1.1 403 Forbidden');
-    exit('Unauthorized');
-}
+require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/includes/AuthManager.php';
+require_once __DIR__ . '/includes/CMS.php';
+require_once __DIR__ . '/includes/SettingsManager.php';
+
+AuthManager::checkAuth();
+
+header('Content-Type: application/json');
+
+$settingsManager = new SettingsManager();
 
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['action'])) {
     if ($_GET['action'] === 'rebuild_cache') {
-        require_once ROOT_DIR . 'includes/CMS.php';
-        CMS::generateCache();
-        
-        CMS::gitCommit("Manual cache regeneration");
-        
-        header('Content-Type: application/json');
-        echo json_encode(['status' => 'success', 'message' => 'Cache byla úspěšně přegenerována.']);
+        echo json_encode($settingsManager->rebuildCache());
+        exit;
+    }
+    if ($_GET['action'] === 'fix_permissions') {
+        echo json_encode($settingsManager->fixPermissions());
         exit;
     }
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (isset($_FILES['favicon_file']) || (isset($_GET['action']) && $_GET['action'] === 'upload_favicon')) {
+        if (!isset($_FILES['favicon_file'])) {
+            echo json_encode(['status' => 'error', 'message' => 'Nebyl nahrán žádný soubor.']);
+            exit;
+        }
+        echo json_encode($settingsManager->uploadFavicon($_FILES['favicon_file']));
+        exit;
+    }
+
     $json = file_get_contents('php://input');
     $data = json_decode($json, true);
 
     if (!$data) {
-        header('HTTP/1.1 400 Bad Request');
-        exit('Invalid data');
+        echo json_encode(['status' => 'error', 'message' => 'Neplatná data']);
+        exit;
     }
 
-    $sitePath = ROOT_DIR . 'config/site.json';
-    $site = [];
-    if (file_exists($sitePath)) {
-        $site = json_decode(file_get_contents($sitePath), true);
-    }
-
-    if (isset($data['site_name'])) $site['site_name'] = $data['site_name'];
-    if (isset($data['phone_nonstop'])) $site['phone_nonstop'] = $data['phone_nonstop'];
-    if (isset($data['phone_landline'])) $site['phone_landline'] = $data['phone_landline'];
-    if (isset($data['email'])) $site['email'] = $data['email'];
-    if (isset($data['address_headquarters'])) $site['address_headquarters'] = $data['address_headquarters'];
-    if (isset($data['address_dispatch'])) $site['address_dispatch'] = $data['address_dispatch'];
-    if (isset($data['ga_id'])) $site['ga_id'] = $data['ga_id'];
-    if (isset($data['contact_form_recipient'])) $site['contact_form_recipient'] = $data['contact_form_recipient'];
-    if (isset($data['error_page_404'])) $site['error_page_404'] = $data['error_page_404'];
-    $site['enable_cache'] = !empty($data['enable_cache']) ? true : false;
-    
-    if (file_put_contents($sitePath, json_encode($site, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE))) {
-        require_once ROOT_DIR . 'includes/CMS.php';
-        CMS::generateCache();
-        CMS::gitCommit("Update global site settings");
-        
-        header('Content-Type: application/json');
-        echo json_encode(['status' => 'success', 'message' => 'Globální nastavení bylo uloženo a cache aktualizována.']);
-    } else {
-        header('HTTP/1.1 500 Internal Server Error');
-        echo json_encode(['status' => 'error', 'message' => 'Chyba při zápisu do site.json.']);
-    }
+    echo json_encode($settingsManager->updateSettings($data));
     exit;
 }
+
+echo json_encode(['status' => 'error', 'message' => 'Metoda není podporována']);
+exit;

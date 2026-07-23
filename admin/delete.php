@@ -35,7 +35,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             }
         }
 
-        require_once ROOT_DIR . 'includes/CMS.php';
+        require_once __DIR__ . '/includes/CMS.php';
         CMS::gitCommit("Delete page: $page");
         
         header('Content-Type: application/json');
