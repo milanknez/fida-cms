@@ -393,7 +393,12 @@ $_SESSION['current_page'] = $currentPage;
                         <p class="text-xs text-slate-400">Přesměrování odcházejících e-mailů přes vlastní SMTP server</p>
                     </div>
                 </div>
-                <button onclick="closeSMTPModal()" class="text-slate-400 hover:text-white"><i class="fa fa-times text-lg"></i></button>
+                <div class="flex items-center gap-2">
+                    <button onclick="openPluginHelpModal('smtp-mailer/smtp-mailer.php')" class="bg-indigo-600/20 hover:bg-indigo-600 text-indigo-300 hover:text-white px-2.5 py-1 rounded-lg border border-indigo-500/30 text-xs font-bold transition-all flex items-center gap-1.5" title="Nápověda k použití pluginu">
+                        <i class="fa fa-question-circle"></i> Nápověda
+                    </button>
+                    <button onclick="closeSMTPModal()" class="text-slate-400 hover:text-white"><i class="fa fa-times text-lg"></i></button>
+                </div>
             </div>
             
             <div class="p-6 space-y-4 max-h-[70vh] overflow-y-auto text-xs">
@@ -450,6 +455,32 @@ $_SESSION['current_page'] = $currentPage;
             <div class="p-5 bg-slate-950 border-t border-white/10 flex justify-between items-center">
                 <button onclick="closeSMTPModal()" class="px-5 py-2.5 text-slate-400 hover:text-white font-bold text-xs uppercase">Zrušit</button>
                 <button onclick="saveSMTPConfig()" id="btn-save-smtp" class="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold px-6 py-2.5 rounded-xl shadow-lg transition-all text-xs uppercase">Uložit Nastavení SMTP</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Plugin Help Modal -->
+    <div id="plugin-help-modal" class="hidden fixed inset-0 bg-black/75 z-[120] flex items-center justify-center p-4 backdrop-blur-sm">
+        <div class="bg-slate-900 w-full max-w-2xl rounded-2xl shadow-2xl border border-white/10 overflow-hidden text-slate-200">
+            <div class="p-6 border-b border-white/10 flex justify-between items-center bg-slate-950">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-600/20 text-indigo-400 flex items-center justify-center font-bold text-lg">
+                        <i class="fa fa-question-circle"></i>
+                    </div>
+                    <div>
+                        <h2 id="plugin-help-title" class="text-white font-extrabold text-base tracking-tight">Nápověda k pluginu</h2>
+                        <p id="plugin-help-subtitle" class="text-xs text-slate-400">Návod k použití a integraci pluginu v projektu</p>
+                    </div>
+                </div>
+                <button onclick="closePluginHelpModal()" class="text-slate-400 hover:text-white transition-colors"><i class="fa fa-times text-lg"></i></button>
+            </div>
+            
+            <div id="plugin-help-content" class="p-6 space-y-4 max-h-[75vh] overflow-y-auto text-xs leading-relaxed">
+                <!-- Dynamicky plněný obsah -->
+            </div>
+
+            <div class="p-4 bg-slate-950 border-t border-white/10 flex justify-end">
+                <button onclick="closePluginHelpModal()" class="bg-indigo-600 hover:bg-indigo-500 text-white font-extrabold px-6 py-2 rounded-xl shadow-lg transition-all text-xs uppercase">Rozumím</button>
             </div>
         </div>
     </div>
@@ -1426,6 +1457,9 @@ $_SESSION['current_page'] = $currentPage;
                                     <h3 class="text-base font-bold text-white tracking-tight">${plugin.name}</h3>
                                     <span class="text-[10px] bg-slate-950 text-indigo-300 border border-indigo-500/20 px-2 py-0.5 rounded-full font-mono font-semibold">v${plugin.version}</span>
                                     ${isActive ? '<span class="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Aktivní</span>' : '<span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">Neaktivní</span>'}
+                                    <button onclick="openPluginHelpModal('${plugin.id}')" class="w-6 h-6 rounded-lg bg-indigo-600/20 hover:bg-indigo-600 border border-indigo-500/40 text-indigo-300 hover:text-white flex items-center justify-center transition-all text-xs" title="Jak použít tento plugin">
+                                        <i class="fa fa-question"></i>
+                                    </button>
                                 </div>
                                 <p class="text-xs text-slate-400 leading-relaxed">${plugin.description}</p>
                                 <div class="text-[10px] text-slate-500 font-mono">Autor: <span class="text-slate-400">${plugin.author}</span> | Soubor: <span class="text-slate-400">${plugin.id}</span></div>
@@ -1452,6 +1486,99 @@ $_SESSION['current_page'] = $currentPage;
             });
 
             container.innerHTML = html;
+        }
+
+        function openPluginHelpModal(pluginId) {
+            const plugin = pluginList.find(p => p.id === pluginId) || { name: 'Plugin', description: '' };
+            const modal = document.getElementById('plugin-help-modal');
+            const titleEl = document.getElementById('plugin-help-title');
+            const subtitleEl = document.getElementById('plugin-help-subtitle');
+            const contentEl = document.getElementById('plugin-help-content');
+
+            if (!modal || !contentEl) return;
+
+            titleEl.innerText = `Nápověda: ${plugin.name}`;
+            subtitleEl.innerText = `Jak nastavit a používat plugin "${plugin.name}" v projektu`;
+
+            if (pluginId.includes('smtp')) {
+                contentEl.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-4">
+                            <h4 class="text-sm font-bold text-indigo-300 mb-1 flex items-center gap-2">
+                                <i class="fa fa-rocket"></i> 1. Odesílání e-mailů přes CMS::sendMail
+                            </h4>
+                            <p class="text-slate-300 mb-2">V jakémkoliv PHP skriptu webu (např. ve formuláři <code class="text-indigo-300 font-mono">send.php</code>) jednoduše zavolejte statickou metodu CMS:</p>
+                            <pre class="bg-slate-950 p-3 rounded-lg border border-white/10 font-mono text-[11px] text-emerald-400 overflow-x-auto">CMS::sendMail($to, $subject, $body, $headers);</pre>
+                            <p class="text-[11px] text-slate-400 mt-2">Pokud je plugin SMTP Mailer **aktivní**, e-mail proběhne přes nastavený SMTP server. Není třeba načítat PHPMailer ani nastavovat přihlašovací údaje přímo v kódu formuláře.</p>
+                        </div>
+
+                        <div class="bg-slate-950 border border-white/10 rounded-xl p-4">
+                            <h4 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                                <i class="fa fa-code text-indigo-400"></i> 2. Příklad v send.php
+                            </h4>
+                            <pre class="bg-slate-900 p-3 rounded-lg border border-white/5 font-mono text-[11px] text-indigo-200 overflow-x-auto">
+&lt;?php
+require_once __DIR__ . '/admin/includes/CMS.php';
+
+$recipient = "knez@fidamedia.cz";
+$subject = "Nová zpráva z kontaktního formuláře";
+$body = "Jméno: Jan Novák\nEmail: jan@example.cz\nText: Dobrý den!";
+$headers = "Reply-To: jan@example.cz\r\n";
+
+// Automaticky využije konfiguraci SMTP pluginu z administrace
+$sent = CMS::sendMail($recipient, $subject, $body, $headers);
+
+if ($sent) {
+    echo json_encode(["success" => true, "message" => "E-mail úspěšně odeslán"]);
+} else {
+    echo json_encode(["success" => false, "message" => "Chyba při odesílání"]);
+}
+</pre>
+                        </div>
+
+                        <div class="bg-slate-950 border border-white/10 rounded-xl p-4 space-y-2">
+                            <h4 class="text-sm font-bold text-white flex items-center gap-2">
+                                <i class="fa fa-cogs text-indigo-400"></i> 3. Konfigurace v Administraci
+                            </h4>
+                            <ul class="list-disc list-inside space-y-1.5 text-slate-300 text-xs">
+                                <li>Klikněte na tlačítko <strong class="text-indigo-300"><i class="fa fa-cog"></i> Nastavení SMTP</strong> u pluginu.</li>
+                                <li>Zadejte údaje vašeho poštovního serveru (např. Seznam: <code class="text-slate-400">smtp.seznam.cz</code>, port <code class="text-slate-400">587</code>, šifrování <code class="text-slate-400">TLS</code>).</li>
+                                <li>Vložte uživatelské jméno a heslo k vaší e-mailové schránce.</li>
+                                <li>Pro ověření stiskněte tlačítko <strong class="text-indigo-300">Otestovat spojení</strong>.</li>
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            } else {
+                contentEl.innerHTML = `
+                    <div class="space-y-4">
+                        <div class="bg-slate-950 border border-white/10 rounded-xl p-4">
+                            <h4 class="text-sm font-bold text-white mb-2 flex items-center gap-2">
+                                <i class="fa fa-info-circle text-indigo-400"></i> Informace o pluginu
+                            </h4>
+                            <p class="text-slate-300 mb-3 leading-relaxed">${plugin.description || 'Pro tento plugin zatím není k dispozici detailnější popis.'}</p>
+                            <div class="text-[11px] text-slate-400 space-y-1 font-mono border-t border-white/5 pt-2">
+                                <div>Autor: <span class="text-white">${plugin.author || 'Neznámý autor'}</span></div>
+                                <div>Verze: <span class="text-white">v${plugin.version || '1.0.0'}</span></div>
+                                <div>Soubor: <span class="text-white">${plugin.id}</span></div>
+                            </div>
+                        </div>
+
+                        <div class="bg-indigo-950/40 border border-indigo-500/30 rounded-xl p-4">
+                            <h4 class="text-sm font-bold text-indigo-300 mb-1 flex items-center gap-2">
+                                <i class="fa fa-check-circle"></i> Jak funguje aktivace
+                            </h4>
+                            <p class="text-slate-300 leading-relaxed">Při zapnutí přepínače <strong>Aktivovat</strong> se skript pluginu automaticky načítá při každém požadavku na web přes <code class="text-indigo-300">CMS::loadActivePlugins()</code>. Funkce a třídy definované v pluginu jsou ihned dostupné v celém systému.</p>
+                        </div>
+                    </div>
+                `;
+            }
+
+            modal.classList.remove('hidden');
+        }
+
+        function closePluginHelpModal() {
+            document.getElementById('plugin-help-modal')?.classList.add('hidden');
         }
 
         function openSMTPModal() {
