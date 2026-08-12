@@ -1,0 +1,21 @@
+{
+    "site_name": "Statek Straňovice – Penzion & Farma",
+    "base_url": "https:\/\/statekstranovice.cz",
+    "active_theme": "stranovice-resort",
+    "phone_nonstop": "+420 737 887 985",
+    "email": "info@statekstranovice.cz",
+    "contact_form_recipient": "knez@fidamedia.cz",
+    "address_headquarters": "Straňovice 1, 387 01 Malenice",
+    "social": {
+        "facebook": "https:\/\/facebook.com",
+        "instagram": "https:\/\/instagram.com"
+    },
+    "error_page_404": "",
+    "phone_landline": "",
+    "address_dispatch": "",
+    "ga_id": "",
+    "favicon": "",
+    "force_https": false,
+    "redirect_www": "none",
+    "enable_cache": false
+}
