@@ -100,5 +100,11 @@
         "title": "404 | Statek Straňovice",
         "description": "",
         "keywords": ""
+    },
+    "pages\/404.php": {
+        "slug": "pages\/404",
+        "title": "Statek Straňovice – Penzion & Farma",
+        "description": "",
+        "keywords": ""
     }
 }
