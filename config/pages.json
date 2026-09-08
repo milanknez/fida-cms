@@ -77,6 +77,12 @@
         "description": "Objevte krásy Šumavy a Pošumaví. Tipy na turistické i cyklistické trasy v okolí našeho statku.",
         "keywords": "výlety Šumava, turistika Malenice, cyklotrasy"
     },
+    "kam-na-jidlo.php": {
+        "slug": "kam-na-jidlo",
+        "title": "Kam na jídlo | Statek Straňovice",
+        "description": "Tipy na skvělé restaurace, kavárny, pizzerie a cukrárny v okolí Malenic, Volyně, Vimperka, Prachatic a Strakonic.",
+        "keywords": "kam na jídlo, restaurace Malenice, restaurace Volyně, kavárny, pizzerie, Šumava, Statek Straňovice"
+    },
     "vyuka.php": {
         "slug": "vyukove-programy",
         "title": "Výukové programy | Statek Straňovice",
@@ -103,6 +109,12 @@
     },
     "pages\/404.php": {
         "slug": "pages\/404",
+        "title": "Statek Straňovice – Penzion & Farma",
+        "description": "",
+        "keywords": ""
+    },
+    "pages\/medovy.php": {
+        "slug": "pages\/medovy",
         "title": "Statek Straňovice – Penzion & Farma",
         "description": "",
         "keywords": ""

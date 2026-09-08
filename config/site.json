@@ -17,5 +17,5 @@
     "favicon": "",
     "force_https": false,
     "redirect_www": "none",
-    "enable_cache": false
+    "enable_cache": true
 }
